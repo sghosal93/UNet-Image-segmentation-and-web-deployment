@@ -4,23 +4,23 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-import cifar10_input
+import model_input
 
 FLAGS = tf.app.flags.FLAGS
 tf.app.flags.DEFINE_integer('batch_size', 32, """Number of images to process in a batch.""")
-tf.app.flags.DEFINE_string('data_dir', '/tmp/cifar10_data', """Path to the CIFAR-10 data directory.""")
+tf.app.flags.DEFINE_string('data_dir', '/tmp/model_data', """Path to the Model's data directory.""")
 tf.app.flags.DEFINE_boolean('use_fp16', False, """Train the model using fp16.""")
 tf.app.flags.DEFINE_float('epsilon', 1e-5, """ Small epsilon to prevent division by zero """)
 
-IMAGE_SIZE = cifar10_input.IMAGE_SIZE
-NUM_CLASSES = cifar10_input.NUM_CLASSES
-NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = cifar10_input.NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
-NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = cifar10_input.NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
+IMAGE_SIZE = model_input.IMAGE_SIZE
+NUM_CLASSES = model_input.NUM_CLASSES
+NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN = model_input.NUM_EXAMPLES_PER_EPOCH_FOR_TRAIN
+NUM_EXAMPLES_PER_EPOCH_FOR_EVAL = model_input.NUM_EXAMPLES_PER_EPOCH_FOR_EVAL
 
 def segmentation_distorted_inputs(rawImageFns, rawLabelMasks, num_examples_per_epoch, shuffle, _condition, mode):
 	if not FLAGS.data_dir:
 		raise ValueError('Please supply a data_dir')
-	names, images, labels = cifar10_input.segmentation_distorted_inputs(imageFns=rawImageFns, labelMasks=rawLabelMasks, batch_size=FLAGS.batch_size, num_examples_per_epoch=num_examples_per_epoch, shuffle=shuffle, _condition=_condition, mode=mode)
+	names, images, labels = model_input.segmentation_distorted_inputs(imageFns=rawImageFns, labelMasks=rawLabelMasks, batch_size=FLAGS.batch_size, num_examples_per_epoch=num_examples_per_epoch, shuffle=shuffle, _condition=_condition, mode=mode)
 	if FLAGS.use_fp16:
 		images = tf.cast(images, tf.float16)
 		labels = tf.cast(labels, tf.float16)

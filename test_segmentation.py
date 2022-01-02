@@ -6,8 +6,8 @@ import os, cv2, time, glob, json, argparse
 
 import numpy as np
 import tensorflow as tf
-import cifar10_input
-import cifar10
+import model_input
+import model
 from copy import deepcopy
 
 tf.logging.set_verbosity(tf.logging.ERROR)
@@ -35,25 +35,25 @@ def unet_Model(model_input):
 	NUM_NN_IMAGE_OUTPUTS = 1
 
 	# Encoder
-	encode1 = cifar10.encoder_layer(layer_input=model_input, n_filters=FILTERS[0], activation=tf.nn.relu, trainable=True, name='Encoder__L1')
-	encode2 = cifar10.encoder_layer(layer_input=encode1, n_filters=FILTERS[1], activation=tf.nn.relu, trainable=True, name='Encoder__L2')
-	encode3 = cifar10.encoder_layer(layer_input=encode2, n_filters=FILTERS[2], activation=tf.nn.relu, trainable=True, name='Encoder__L3')
-	encode4 = cifar10.encoder_layer(layer_input=encode3, n_filters=FILTERS[3], activation=tf.nn.relu, trainable=True, name='Encoder__L4')
-	encode5 = cifar10.encoder_layer(layer_input=encode4, n_filters=FILTERS[4], activation=tf.nn.relu, trainable=True, name='Encoder__L5')
+	encode1 = model.encoder_layer(layer_input=model_input, n_filters=FILTERS[0], activation=tf.nn.relu, trainable=True, name='Encoder__L1')
+	encode2 = model.encoder_layer(layer_input=encode1, n_filters=FILTERS[1], activation=tf.nn.relu, trainable=True, name='Encoder__L2')
+	encode3 = model.encoder_layer(layer_input=encode2, n_filters=FILTERS[2], activation=tf.nn.relu, trainable=True, name='Encoder__L3')
+	encode4 = model.encoder_layer(layer_input=encode3, n_filters=FILTERS[3], activation=tf.nn.relu, trainable=True, name='Encoder__L4')
+	encode5 = model.encoder_layer(layer_input=encode4, n_filters=FILTERS[4], activation=tf.nn.relu, trainable=True, name='Encoder__L5')
 	
 	# Flatten
-	flat = cifar10.flatten(encode5, 'Flatten')
+	flat = model.flatten(encode5, 'Flatten')
 	
 	# Decoder
-	decode1 = cifar10.decoder_layer(layer_input=flat, is_flat=True, last_img_shape=encode5.get_shape().as_list(), n_filters=FILTERS[3], activation=tf.nn.relu, unpooling_size=[30, 40], trainable=True, name='Decoder__L1')
-	decode1 = cifar10.add_layers(decode1, encode4)		
-	decode2 = cifar10.decoder_layer(layer_input=decode1, is_flat=False, last_img_shape=None, n_filters=FILTERS[2], activation=tf.nn.relu, unpooling_size=[60, 80], trainable=True, name='Decoder__L2')
-	decode2 = cifar10.add_layers(decode2, encode3)
-	decode3 = cifar10.decoder_layer(layer_input=decode2, is_flat=False, last_img_shape=None, n_filters=FILTERS[1], activation=tf.nn.relu, unpooling_size=[120, 160], trainable=True, name='Decoder__L3')
-	decode3 = cifar10.add_layers(decode3, encode2)
-	decode4 = cifar10.decoder_layer(layer_input=decode3, is_flat=False, last_img_shape=None, n_filters=FILTERS[0], activation=tf.nn.relu, unpooling_size=[240, 320], trainable=True, name='Decoder__L4')
-	decode4 = cifar10.add_layers(decode4, encode1)
-	decode5 = cifar10.decoder_layer(layer_input=decode4, is_flat=False, last_img_shape=None, n_filters=NUM_NN_IMAGE_OUTPUTS, activation=tf.nn.sigmoid, unpooling_size=[480, 640], trainable=True, name='Decoder__L5')
+	decode1 = model.decoder_layer(layer_input=flat, is_flat=True, last_img_shape=encode5.get_shape().as_list(), n_filters=FILTERS[3], activation=tf.nn.relu, unpooling_size=[30, 40], trainable=True, name='Decoder__L1')
+	decode1 = model.add_layers(decode1, encode4)		
+	decode2 = model.decoder_layer(layer_input=decode1, is_flat=False, last_img_shape=None, n_filters=FILTERS[2], activation=tf.nn.relu, unpooling_size=[60, 80], trainable=True, name='Decoder__L2')
+	decode2 = model.add_layers(decode2, encode3)
+	decode3 = model.decoder_layer(layer_input=decode2, is_flat=False, last_img_shape=None, n_filters=FILTERS[1], activation=tf.nn.relu, unpooling_size=[120, 160], trainable=True, name='Decoder__L3')
+	decode3 = model.add_layers(decode3, encode2)
+	decode4 = model.decoder_layer(layer_input=decode3, is_flat=False, last_img_shape=None, n_filters=FILTERS[0], activation=tf.nn.relu, unpooling_size=[240, 320], trainable=True, name='Decoder__L4')
+	decode4 = model.add_layers(decode4, encode1)
+	decode5 = model.decoder_layer(layer_input=decode4, is_flat=False, last_img_shape=None, n_filters=NUM_NN_IMAGE_OUTPUTS, activation=tf.nn.sigmoid, unpooling_size=[480, 640], trainable=True, name='Decoder__L5')
 	
 	return decode5
 
@@ -70,7 +70,7 @@ def inference_batch(rawImage, rawLabelFns, folder):
 
 	with tf.Graph().as_default():
 		global_step = tf.get_variable('global_step', [], initializer=tf.constant_initializer(0), trainable=False)
-		names, images, labels = cifar10.segmentation_distorted_inputs(rawImage, rawLabelFns, num_examples_per_epoch, shuffle=True, _condition=str(condition), mode="test")
+		names, images, labels = model.segmentation_distorted_inputs(rawImage, rawLabelFns, num_examples_per_epoch, shuffle=True, _condition=str(condition), mode="test")
 		batch_queue = tf.contrib.slim.prefetch_queue.prefetch_queue([names, images, labels], capacity=2*FLAGS.num_gpus)
 		names_batch, image_batch, label_batch = batch_queue.dequeue()
 
